@@ -29,9 +29,7 @@ def get_config_path():
     return os.path.join(get_local_dir(), LOCAL_CONF)
 
 def mysql_src(variables):
-
     variables['backend'] = 'mycli'
-
     src = """\
 #!/bin/bash
 
@@ -42,7 +40,7 @@ FLAGS+=' --host={host}'
 FLAGS+=' --port={port}'
 FLAGS+=' --user={user}'
 # FLAGS+=' -t' # table format
-FLAGS+=" --password={password}"
+FLAGS+=' --password={password}'
 
 if [ -n "$1" ]; then
 	FLAGS+=" --execute=\"$1\""
@@ -51,9 +49,22 @@ fi
 COMMAND="{backend} $FLAGS giphy"
 
 eval $COMMAND""".format(**variables)
-
     return src
 
+def redis_src(variables):
+    variables['backend'] = 'redis-cli'
+    src = """\
+#!/bin/bash
+
+FLAGS=''
+FLAGS+=' -h {host}'
+FLAGS+=' -p {port}'
+FLAGS+=' -a {password}'
+
+COMMAND="{backend} $FLAGS"
+
+eval $COMMAND""".format(**variables)
+    return src
 
 def init():
 
@@ -98,7 +109,8 @@ def write_files(config, args):
         return value
 
     type_src_table = {
-        "mysql": mysql_src
+        "mysql": mysql_src,
+        "redis": redis_src
     }
 
     if not config.get('namespaces', {}):
