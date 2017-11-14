@@ -30,14 +30,7 @@ def get_config_path():
 
 def mysql_src(variables):
 
-    host, port, user, password = (
-        variables['host'],
-        variables['port'],
-        variables['user'],
-        variables['password']
-    )
-
-    backend = "mycli"
+    variables['backend'] = 'mycli'
 
     src = """\
 #!/bin/bash
@@ -57,7 +50,7 @@ fi
 
 COMMAND="{backend} $FLAGS giphy"
 
-eval $COMMAND""".format(host=host, port=port, user=user, password=password, backend=backend)
+eval $COMMAND""".format(**variables)
 
     return src
 
@@ -68,14 +61,12 @@ def init():
     local_dir_path = get_local_dir()
     mkdir_p(local_dir_path)
 
-
     config_file_path = get_config_path()
 
     # create a config file if there isn't one
     if not os.path.isfile(config_file_path):
         with open(config_file_path, 'w') as fd:
             fd.write('{}')
-
 
     # config file contains passwords, so only the owner should be able to read/write
     os.chmod(local_dir_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
@@ -132,7 +123,7 @@ def write_files(config, args):
 
             src_func = type_src_table.get(entry_type, None)
             if not src_func:
-                raise Exception('Unsupported type: {type}.'.format(type=type))
+                raise Exception('Unsupported type: {entry_type}.'.format(entry_type=entry_type))
 
             src = src_func(entry)
 
@@ -145,6 +136,7 @@ def write_files(config, args):
 
             print('[*] wrote file: {entry_path}'.format(entry_path=entry_path))
 
+            # read write execute for the owner only
             os.chmod(entry_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
 def main():
@@ -158,7 +150,7 @@ def main():
 
     config_file_path = get_config_path()
     with open(config_file_path, 'w') as fd:
-        json.dump(config, fd)
+        json.dump(config, fd, indent=2)
 
 if __name__ == '__main__':
     main()
